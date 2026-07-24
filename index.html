@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RecipeForToday — gamble on dinner</title>
+<meta name="description" content="Three rolls a day. A random recipe from the pot. You don't find out if it was any good until after you've eaten it.">
+<meta property="og:title" content="RecipeForToday">
+<meta property="og:description" content="Three rolls a day. You don't find out if it was any good until after you've eaten it.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230C2B29'/><path d='M20 40h60l-6 38H26z' fill='%23E2412C'/><rect x='14' y='33' width='72' height='9' rx='4' fill='%23F3EFE3'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   RecipeForToday — enamelware & brass
+   Palette derives from a speckled cast-iron Dutch oven.
+   ============================================================ */
+:root{
+  --broth:#0C2B29;
+  --enamel:#123B38;
+  --enamel-hi:#1A4C48;
+  --rim:#26635C;
+  --porcelain:#F3EFE3;
+  --chalk:#8CA9A2;
+  --tomato:#E2412C;
+  --tomato-lo:#B32E1E;
+  --brass:#E9B23C;
+  --sludge:#B4C34A;
+
+  --display:'Bricolage Grotesque',system-ui,sans-serif;
+  --body:'Newsreader',Georgia,serif;
+  --mono:'DM Mono',ui-monospace,monospace;
+
+  --gutter:clamp(1.1rem,4vw,3rem);
+  --maxw:1120px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+
+body{
+  background-color:var(--broth);
+  /* enamelware speckle */
+  background-image:
+    radial-gradient(circle at 12% 22%, rgba(243,239,227,.055) 0 1.1px, transparent 1.2px),
+    radial-gradient(circle at 68% 8%,  rgba(243,239,227,.045) 0 1.4px, transparent 1.5px),
+    radial-gradient(circle at 38% 74%, rgba(243,239,227,.05) 0 1px, transparent 1.1px),
+    radial-gradient(circle at 88% 56%, rgba(243,239,227,.04) 0 1.3px, transparent 1.4px),
+    radial-gradient(circle at 5% 88%,  rgba(243,239,227,.045) 0 1.2px, transparent 1.3px);
+  background-size:180px 180px,240px 240px,150px 150px,300px 300px,210px 210px;
+  color:var(--porcelain);
+  font-family:var(--body);
+  font-size:clamp(1rem,.96rem + .2vw,1.09rem);
+  line-height:1.62;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+::selection{background:var(--brass);color:var(--broth)}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding-inline:var(--gutter)}
+
+/* ---------- utility type ---------- */
+.mono{font-family:var(--mono);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase}
+.eyebrow{font-family:var(--mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk)}
+
+/* ---------- top bar ---------- */
+.bar{
+  position:sticky;top:0;z-index:60;
+  display:flex;align-items:center;gap:1rem;
+  padding:.7rem var(--gutter);
+  background:rgba(12,43,41,.86);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--enamel-hi);
+}
+.brand{
+  font-family:var(--display);font-weight:800;font-size:.95rem;
+  letter-spacing:-.02em;color:var(--porcelain);
+  text-decoration:none;display:flex;align-items:center;gap:.5rem;
+}
+.brand b{color:var(--tomato)}
+.bar-spacer{flex:1}
+.rolls-left{
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--chalk);display:flex;align-items:center;gap:.45rem;
+}
+.pips{display:flex;gap:3px}
+.pip{width:7px;height:7px;border-radius:50%;background:var(--brass);transition:background .3s}
+.pip.spent{background:var(--enamel-hi)}
+
+.btn-ghost{
+  font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;
+  background:none;border:1px solid var(--rim);color:var(--porcelain);
+  padding:.42rem .8rem;border-radius:2px;cursor:pointer;transition:.2s;
+}
+.btn-ghost:hover{background:var(--enamel-hi);border-color:var(--brass)}
+
+/* ---------- hero ---------- */
+.hero{
+  min-height:calc(100svh - 52px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding-block:1.4rem 1.8rem;position:relative;
+}
+.hero h1{
+  font-family:var(--display);
+  font-weight:800;
+  font-size:clamp(2.1rem,7.2vw,5rem);
+  line-height:.94;
+  letter-spacing:-.035em;
+  max-width:15ch;
+  text-wrap:balance;
+}
+.hero h1 em{font-style:normal;color:var(--tomato);display:block}
+.hero .deck{
+  max-width:44ch;margin-top:1rem;color:var(--chalk);
+  font-size:clamp(.94rem,.9rem + .2vw,1.04rem);line-height:1.55;text-wrap:balance;
+}
+
+/* ---------- the start button ---------- */
+.start{
+  margin-top:1.6rem;
+  font-family:var(--display);font-weight:700;
+  font-size:clamp(1rem,3.4vw,1.32rem);letter-spacing:-.01em;
+  color:var(--broth);background:var(--tomato);
+  border:none;border-radius:999px;
+  padding:.95rem 2.4rem;cursor:pointer;
+  box-shadow:0 6px 0 var(--tomato-lo);
+  transition:transform .12s cubic-bezier(.34,1.56,.64,1),box-shadow .12s,background .2s;
+}
+.start:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 0 var(--tomato-lo)}
+.start:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 var(--tomato-lo)}
+.start:disabled{background:var(--enamel-hi);color:var(--chalk);box-shadow:0 6px 0 #0d2f2c;cursor:not-allowed}
+.start-note{margin-top:.7rem;min-height:1.2em;font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--chalk)}
+
+/* ---------- THE POT (signature) ---------- */
+.pot-stage{
+  margin-top:.9rem;width:min(290px,58vw);
+  transition:transform .9s cubic-bezier(.65,0,.35,1),opacity .5s;
+  will-change:transform;
+}
+.pot-stage svg{width:100%;height:auto;display:block;overflow:visible}
+
+/* docked state — pot shrinks to the corner and keeps stirring */
+body.rolled .pot-stage{
+  position:fixed;left:1rem;bottom:1rem;z-index:55;
+  width:104px;margin:0;
+}
+@media(max-width:640px){ body.rolled .pot-stage{width:74px;left:.6rem;bottom:.6rem} }
+
+.pot-body{fill:var(--tomato)}
+.pot-shade{fill:var(--tomato-lo)}
+.pot-rim{fill:var(--porcelain)}
+.pot-handle{fill:none;stroke:var(--porcelain);stroke-width:7;stroke-linecap:round}
+.broth-surface{fill:#7d4a1e}
+.speck{fill:var(--porcelain);opacity:.55}
+
+/* steam */
+.steam{stroke:var(--porcelain);stroke-width:4;stroke-linecap:round;fill:none;opacity:0}
+.boiling .steam{animation:steam 2.6s ease-in-out infinite}
+.boiling .steam:nth-of-type(2){animation-delay:.55s}
+.boiling .steam:nth-of-type(3){animation-delay:1.15s}
+@keyframes steam{
+  0%{opacity:0;transform:translateY(6px) scaleY(.6)}
+  25%{opacity:.32}
+  70%{opacity:.14}
+  100%{opacity:0;transform:translateY(-26px) scaleY(1.15)}
+}
+
+/* bubbles */
+.bub{fill:#a8641f;opacity:0}
+.boiling .bub{animation:bub 1.5s ease-in-out infinite}
+.boiling .bub:nth-of-type(2){animation-delay:.32s}
+.boiling .bub:nth-of-type(3){animation-delay:.66s}
+.boiling .bub:nth-of-type(4){animation-delay:.95s}
+.boiling .bub:nth-of-type(5){animation-delay:1.2s}
+@keyframes bub{
+  0%{opacity:0;transform:scale(.2)}
+  40%{opacity:.9;transform:scale(1)}
+  100%{opacity:0;transform:scale(1.5) translateY(-5px)}
+}
+
+/* the ladle — stirs forever once started */
+.ladle{transform-box:fill-box;transform-origin:88% 72%}
+.boiling .ladle{animation:stir 1.35s linear infinite}
+@keyframes stir{to{transform:rotate(360deg)}}
+.ladle-stick{stroke:var(--porcelain);stroke-width:9;stroke-linecap:round;fill:none}
+.ladle-bowl{fill:var(--porcelain)}
+
+/* pot judder while boiling */
+.boiling .pot-group{animation:judder .28s ease-in-out infinite}
+@keyframes judder{0%,100%{transform:translate(0,0)}50%{transform:translate(.9px,-.9px)}}
+
+/* ---------- recipe card ---------- */
+.card-slot{display:none;padding-block:3rem 5rem}
+body.rolled .card-slot{display:block;animation:rise .6s cubic-bezier(.22,1,.36,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+body.rolled .hero{min-height:auto;padding-block:1.6rem 0}
+body.rolled .hero h1,body.rolled .hero .deck{display:none}
+
+.ticket{
+  background:var(--porcelain);color:#182B29;
+  max-width:720px;margin:0 auto;
+  border-radius:3px;
+  box-shadow:0 26px 60px rgba(0,0,0,.42);
+  overflow:hidden;
+}
+.ticket-head{
+  padding:2rem clamp(1.3rem,5vw,2.6rem) 1.5rem;
+  border-bottom:2px dashed #C9C2B0;
+}
+.ticket-kicker{
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--tomato-lo);
+}
+.ticket h2{
+  font-family:var(--display);font-weight:800;
+  font-size:clamp(1.7rem,5.4vw,2.6rem);line-height:1.02;letter-spacing:-.03em;
+  margin-top:.5rem;color:#0F2422;text-wrap:balance;
+}
+.byline{margin-top:.7rem;font-size:1rem;color:#4A5C58}
+.byline b{font-weight:500;color:#182B29}
+
+.facts{
+  display:flex;flex-wrap:wrap;gap:0 1.6rem;
+  margin-top:1.1rem;padding-top:1.1rem;border-top:1px solid #DED8C8;
+}
+.fact{display:flex;flex-direction:column;gap:.1rem}
+.fact dt{font-family:var(--mono);font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:#7C8B87}
+.fact dd{font-family:var(--display);font-weight:700;font-size:.98rem;color:#182B29}
+
+.ticket-body{padding:1.8rem clamp(1.3rem,5vw,2.6rem) 2rem;display:grid;gap:2rem}
+@media(min-width:780px){.ticket-body{grid-template-columns:minmax(230px,.85fr) 1.3fr;gap:2.6rem}}
+
+.sec-title{
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
+  color:#7C8B87;padding-bottom:.55rem;border-bottom:1px solid #DED8C8;margin-bottom:.9rem;
+  display:flex;justify-content:space-between;
+}
+.ing{list-style:none;display:grid;gap:.55rem}
+.ing li{
+  font-size:.97rem;line-height:1.4;padding-left:1.05rem;position:relative;color:#233734;
+}
+.ing li::before{
+  content:'';position:absolute;left:0;top:.62em;
+  width:6px;height:6px;border-radius:1px;background:var(--tomato);
+}
+.steps{list-style:none;counter-reset:s;display:grid;gap:1.1rem}
+.steps li{counter-increment:s;position:relative;padding-left:2.3rem;font-size:1.02rem;line-height:1.58;color:#233734}
+.steps li::before{
+  content:counter(s,decimal-leading-zero);
+  position:absolute;left:0;top:.16em;
+  font-family:var(--mono);font-size:.74rem;font-weight:500;
+  color:var(--tomato-lo);
+}
+
+/* ---------- the sealed lid ---------- */
+.seal{
+  background:#E7E1D2;border-top:2px dashed #C9C2B0;
+  padding:1.7rem clamp(1.3rem,5vw,2.6rem) 2rem;text-align:center;
+}
+.seal p{max-width:44ch;margin:.55rem auto 1.1rem;color:#4A5C58;font-size:.97rem}
+.lid-wrap{position:relative;height:70px;margin-bottom:.4rem}
+.lid{
+  position:absolute;inset:0;margin:auto;width:150px;height:46px;
+  transition:transform .75s cubic-bezier(.3,1.4,.5,1),opacity .5s;
+}
+.lid svg{width:100%;height:auto}
+.seal.open .lid{transform:translateY(-58px) rotate(-13deg);opacity:0}
+
+.btn-cook{
+  font-family:var(--display);font-weight:700;font-size:.95rem;
+  background:#0F2422;color:var(--porcelain);border:none;border-radius:999px;
+  padding:.75rem 1.7rem;cursor:pointer;transition:.2s;
+}
+.btn-cook:hover{background:var(--tomato);color:var(--broth)}
+
+/* revealed rating */
+.reveal{display:none}
+.seal.open .reveal{display:block;animation:rise .5s .35s cubic-bezier(.22,1,.36,1) both}
+.seal.open .pre-reveal{display:none}
+.stars{font-size:2rem;letter-spacing:.16em;line-height:1;margin-bottom:.45rem}
+.score{font-family:var(--display);font-weight:800;font-size:2.5rem;letter-spacing:-.03em;line-height:1}
+.score span{font-size:1.1rem;color:#7C8B87;font-weight:500}
+.votes{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:#7C8B87;margin-top:.3rem}
+.verdict{max-width:48ch;margin:1rem auto 0;font-size:1rem;font-style:italic;color:#233734}
+.band{display:inline-block;font-family:var(--mono);font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;padding:.3rem .7rem;border-radius:2px;margin-top:1rem}
+.band.good{background:#0F2422;color:var(--brass)}
+.band.bad{background:var(--sludge);color:#243004}
+
+/* ---------- sections ---------- */
+.section{padding-block:clamp(3.4rem,9vw,6rem);border-top:1px solid var(--enamel-hi)}
+.section h2{
+  font-family:var(--display);font-weight:800;
+  font-size:clamp(1.6rem,5vw,2.5rem);letter-spacing:-.03em;line-height:1.04;
+  margin-top:.55rem;max-width:18ch;text-wrap:balance;
+}
+.lede{max-width:52ch;margin-top:.9rem;color:var(--chalk)}
+
+.rules{display:grid;gap:1.6rem;margin-top:2.4rem}
+@media(min-width:720px){.rules{grid-template-columns:repeat(3,1fr);gap:2rem}}
+.rule{border-top:2px solid var(--tomato);padding-top:1rem}
+.rule .n{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;color:var(--tomato)}
+.rule h3{font-family:var(--display);font-weight:700;font-size:1.18rem;letter-spacing:-.02em;margin:.45rem 0 .5rem}
+.rule p{color:var(--chalk);font-size:.98rem}
+
+/* pantry grid */
+.pantry{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:.7rem;margin-top:2.2rem}
+.slot{
+  aspect-ratio:1/1.08;border:1px solid var(--enamel-hi);border-radius:3px;
+  background:var(--enamel);padding:.8rem;
+  display:flex;flex-direction:column;justify-content:space-between;
+  transition:.25s;
+}
+.slot.locked{align-items:center;justify-content:center;color:var(--rim)}
+.slot.locked span{font-family:var(--display);font-weight:800;font-size:1.5rem}
+.slot.found{border-color:var(--rim)}
+.slot.cooked{border-color:var(--brass);background:var(--enamel-hi)}
+.slot .st{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--chalk)}
+.slot .nm{font-family:var(--display);font-weight:700;font-size:.92rem;line-height:1.14;letter-spacing:-.01em}
+.slot .sc{font-family:var(--mono);font-size:.72rem;color:var(--brass)}
+.slot .sc.bad{color:var(--sludge)}
+.pantry-stat{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--chalk);margin-top:1.4rem}
+
+/* ---------- modal ---------- */
+.modal{
+  position:fixed;inset:0;z-index:100;display:none;
+  align-items:center;justify-content:center;padding:1.2rem;
+  background:rgba(6,22,21,.82);backdrop-filter:blur(6px);
+}
+.modal.open{display:flex}
+.sheet{
+  background:var(--enamel);border:1px solid var(--rim);border-radius:4px;
+  max-width:420px;width:100%;padding:2rem;
+  animation:rise .35s cubic-bezier(.22,1,.36,1) both;
+  max-height:86vh;overflow-y:auto;
+}
+.sheet h3{font-family:var(--display);font-weight:800;font-size:1.5rem;letter-spacing:-.025em;margin-bottom:.5rem}
+.sheet p{color:var(--chalk);font-size:.96rem;margin-bottom:1.3rem}
+label.f{display:block;font-family:var(--mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:var(--chalk);margin-bottom:.4rem}
+input.f{
+  width:100%;background:var(--broth);border:1px solid var(--rim);color:var(--porcelain);
+  font-family:var(--body);font-size:1rem;padding:.7rem .85rem;border-radius:3px;margin-bottom:1.1rem;
+}
+input.f:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:var(--brass)}
+.btn-solid{
+  width:100%;font-family:var(--display);font-weight:700;font-size:1rem;
+  background:var(--tomato);color:var(--broth);border:none;border-radius:999px;
+  padding:.8rem;cursor:pointer;transition:.2s;
+}
+.btn-solid:hover{background:var(--brass)}
+.sheet .fine{font-size:.82rem;color:var(--rim);margin:1rem 0 0;line-height:1.5}
+.close-x{position:absolute;top:1rem;right:1.1rem;background:none;border:none;color:var(--chalk);font-size:1.5rem;cursor:pointer;line-height:1}
+.sheet{position:relative}
+
+.hist{list-style:none;display:grid;gap:.55rem;margin-bottom:1.2rem}
+.hist li{display:flex;justify-content:space-between;gap:.8rem;padding-bottom:.55rem;border-bottom:1px solid var(--enamel-hi);font-size:.94rem}
+.hist .h-sc{font-family:var(--mono);font-size:.78rem;color:var(--brass);white-space:nowrap}
+.hist .h-sc.bad{color:var(--sludge)}
+.hist .h-sc.sealed{color:var(--rim)}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--enamel-hi);padding-block:2.6rem 3.4rem}
+footer p{color:var(--rim);font-size:.88rem;max-width:60ch}
+footer a{color:var(--chalk)}
+
+/* ---------- a11y ---------- */
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:1rem;top:1rem;z-index:200;background:var(--brass);color:var(--broth);padding:.6rem 1rem;border-radius:3px}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+  .boiling .ladle{animation:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the pot</a>
+
+<nav class="bar">
+  <a class="brand" href="./">Recipe<b>For</b>Today</a>
+  <div class="bar-spacer"></div>
+  <div class="rolls-left" title="Rolls remaining today">
+    <span id="rollsText">3 left today</span>
+    <span class="pips" id="pips"></span>
+  </div>
+  <button class="btn-ghost" id="accountBtn">Sign in</button>
+</nav>
+
+<main id="main">
+<section class="hero wrap">
+  <h1>You don't get to pick.<em>Neither does taste.</em></h1>
+  <p class="deck">Three recipes a day, drawn blind from a pot of thirty. Half of them are genuinely good. Half of them are genuinely not. You find out which after you've eaten it.</p>
+
+  <button class="start" id="startBtn">Stir the pot</button>
+  <p class="start-note" id="startNote"></p>
+
+  <div class="pot-stage" id="potStage">
+    <svg viewBox="0 0 260 200" role="img" aria-label="An enamel cooking pot with a ladle in it">
+      <g id="steamGroup">
+        <path class="steam" d="M104 58c-9-11 9-19 0-30"/>
+        <path class="steam" d="M130 52c-9-12 9-20 0-31"/>
+        <path class="steam" d="M156 58c-9-11 9-19 0-30"/>
+      </g>
+      <g class="pot-group">
+        <path class="pot-handle" d="M46 104c-16 0-16 26 0 26"/>
+        <path class="pot-handle" d="M214 104c16 0 16 26 0 26"/>
+        <path class="pot-body" d="M48 92h164l-13 88a10 10 0 0 1-10 8H71a10 10 0 0 1-10-8z"/>
+        <path class="pot-shade" d="M168 92h44l-13 88a10 10 0 0 1-10 8h-33z"/>
+        <circle class="speck" cx="82" cy="128" r="2.1"/>
+        <circle class="speck" cx="112" cy="158" r="1.7"/>
+        <circle class="speck" cx="146" cy="132" r="2"/>
+        <circle class="speck" cx="96" cy="172" r="1.5"/>
+        <rect class="pot-rim" x="38" y="80" width="184" height="17" rx="8.5"/>
+        <ellipse class="broth-surface" cx="130" cy="88" rx="84" ry="7"/>
+        <g>
+          <circle class="bub" cx="100" cy="88" r="4"/>
+          <circle class="bub" cx="130" cy="86" r="5"/>
+          <circle class="bub" cx="158" cy="89" r="3.4"/>
+          <circle class="bub" cx="115" cy="90" r="3"/>
+          <circle class="bub" cx="146" cy="86" r="4.2"/>
+        </g>
+        <g class="ladle">
+          <path class="ladle-stick" d="M130 88 L188 30"/>
+          <circle class="ladle-bowl" cx="128" cy="90" r="13"/>
+          <ellipse cx="128" cy="87" rx="9" ry="4" fill="#7d4a1e"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+</section>
+
+<section class="card-slot wrap" id="cardSlot" aria-live="polite">
+  <article class="ticket" id="ticket"></article>
+</section>
+
+<section class="section wrap" id="rulesSec">
+  <p class="eyebrow">The deal</p>
+  <h2>Three rolls. No takebacks.</h2>
+  <p class="lede">The rules exist so you can't game your way to the good half. That's the whole product.</p>
+  <div class="rules">
+    <div class="rule">
+      <p class="n">Rule 01</p>
+      <h3>Three a day, then the pot's empty</h3>
+      <p>Rolls reset at midnight, your time. Breakfast, lunch, dinner. Spend them how you like, but spend them carefully.</p>
+    </div>
+    <div class="rule">
+      <p class="n">Rule 02</p>
+      <h3>The rating stays under the lid</h3>
+      <p>You get the full recipe, every ingredient and every step. You don't get the star rating until you press "I cooked it." No peeking, no pre-screening.</p>
+    </div>
+    <div class="rule">
+      <p class="n">Rule 03</p>
+      <h3>The odds are exactly even</h3>
+      <p>Every roll flips a coin first. Heads pulls from the recipes rated 2.6 and up. Tails pulls from 2.5 and down. Fifty-fifty, every single time.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" id="pantrySec">
+  <p class="eyebrow">Your pantry</p>
+  <h2>Thirty recipes. Locked until you draw them.</h2>
+  <p class="lede">Every recipe you roll stays here for good. Cook it and the rating unlocks with it.</p>
+  <div class="pantry" id="pantry"></div>
+  <p class="pantry-stat" id="pantryStat"></p>
+</section>
+
+<footer class="wrap">
+  <p><strong>On the recipes:</strong> all thirty are original, written for this project and released under CC BY-SA 4.0. The bad ones are unappetizing, never unsafe — no undercooked meat, no food-safety roulette. <a href="https://github.com/">Source on GitHub</a>.</p>
+</footer>
+</main>
+
+<div class="modal" id="modal">
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <button class="close-x" id="closeModal" aria-label="Close">&times;</button>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   RecipeForToday
+   Static build. No server. Swap DATA + Store for a real backend
+   later — those are the only two things that need to change.
+   ============================================================ */
+
+/* ---------- 1. DATA LAYER ---------------------------------- */
+/* Flip to true once you're serving data/recipes.json and want the
+   pot to pull from the file instead of the inline seed. Works on
+   GitHub Pages because it's a same-origin fetch. */
+const USE_REMOTE_DB = false;
+
+const SEED = [{"id":"r001","title":"Burnt Butter Tomato Rice","author":"@mildlyferal","source":"RecipeForToday Community","rating":4.7,"votes":2841,"time":"35 min","servings":4,"difficulty":"Easy","tags":["dinner","vegetarian","one-pan"],"ingredients":["4 tbsp unsalted butter","1 large onion, diced small","4 cloves garlic, sliced thin","1 1/2 cups long-grain white rice, rinsed until the water runs clear","1 can (14 oz) whole peeled tomatoes, crushed by hand","1 3/4 cups chicken or vegetable stock","1 tsp kosher salt, plus more to finish","1/2 tsp black pepper","1 handful basil leaves, torn","Parmesan, for grating"],"steps":["Melt the butter in a wide, heavy pot over medium heat. Keep cooking past the foaming stage until the milk solids turn the color of a walnut shell and it smells like toasted hazelnuts, about 4 minutes. Do not walk away — it turns from nutty to acrid in under thirty seconds.","Add the onion and a pinch of salt. Cook 6 minutes until soft and translucent, scraping the browned bits off the bottom as you go.","Add the garlic and cook 1 minute more, just until fragrant.","Stir in the rinsed rice and toast it in the butter for 2 minutes, until the grains look chalky and slightly translucent at the edges.","Add the crushed tomatoes, stock, salt, and pepper. Stir once, bring to a boil, then drop to the lowest heat and cover.","Cook 18 minutes without lifting the lid. Then kill the heat and let it sit, still covered, for 10 minutes.","Fluff with a fork, fold in the basil, and finish with grated Parmesan and flaky salt."],"verdict":"The burnt butter is doing all the work here and it earns its keep. Reviewers keep calling it a weeknight staple."},{"id":"r002","title":"Cold Ramen With Peanut and Lime","author":"u/noodlestructuralist","source":"RecipeForToday Community","rating":4.4,"votes":1930,"time":"20 min","servings":2,"difficulty":"Easy","tags":["lunch","no-cook sauce","vegetarian"],"ingredients":["2 blocks instant ramen, seasoning packets discarded","1/3 cup smooth peanut butter","3 tbsp soy sauce","2 tbsp rice vinegar","1 tbsp honey or maple syrup","1 tbsp chili crisp, plus more for serving","1 clove garlic, grated on a microplane","1 inch ginger, grated","Juice of 1 lime","4-6 tbsp hot water","1 cucumber, cut into matchsticks","3 scallions, sliced thin on a bias","Crushed roasted peanuts"],"steps":["Boil the noodles for 30 seconds less than the package says. Drain and rinse under cold running water for a full minute, tossing with your hands until they are genuinely cold. Drain hard.","In a bowl, whisk the peanut butter, soy sauce, vinegar, honey, chili crisp, garlic, ginger, and lime juice. It will seize into a paste. This is expected.","Add hot water one tablespoon at a time, whisking, until the sauce loosens to the texture of heavy cream and falls off the whisk in a ribbon.","Toss the cold noodles with the sauce until every strand is coated.","Top with cucumber, scallions, peanuts, and more chili crisp. Eat within ten minutes — the noodles drink the sauce as they sit."],"verdict":"Reliably good. The cold-water rinse is non-negotiable and most reviewers say it's the step they almost skipped."},{"id":"r003","title":"Skillet Chicken Thighs With Vinegar Pan Sauce","author":"Marguerite O.","source":"RecipeForToday Community","rating":4.8,"votes":5107,"time":"30 min","servings":4,"difficulty":"Medium","tags":["dinner","chicken","one-pan"],"ingredients":["6 bone-in, skin-on chicken thighs","1 1/2 tsp kosher salt","1 tsp black pepper","1 tbsp neutral oil","3 shallots, sliced into rings","1/3 cup sherry vinegar or red wine vinegar","3/4 cup chicken stock","2 tbsp cold butter, cubed","1 tbsp Dijon mustard","Fresh parsley or tarragon, chopped"],"steps":["Pat the chicken skin bone dry with paper towels. Season all over with salt and pepper. Let it sit uncovered at room temperature for 15 minutes if you have it.","Put the oil in a cold, heavy skillet. Lay the thighs skin-side down, then turn the heat to medium. Starting cold renders the fat instead of seizing the skin.","Cook undisturbed for 12 to 14 minutes. The skin releases on its own when it's ready — if you have to pull, it isn't. It should be deep amber and rigid.","Flip and cook 5 minutes more, until the thickest part reads 175°F. Move the chicken to a plate.","Pour off all but 1 tablespoon of fat. Add the shallots and cook 2 minutes until softened.","Pour in the vinegar and scrape the bottom of the pan clean. Let it reduce until nearly dry, about 2 minutes — it will smell sharp enough to make you cough. That passes.","Add the stock and simmer until reduced by half. Kill the heat, whisk in the Dijon, then the cold butter one cube at a time until glossy.","Return the chicken skin-side up, spoon sauce around (never over) the skin, and scatter with herbs."],"verdict":"The highest-rated recipe in the pot. The cold-pan start is the whole trick."},{"id":"r004","title":"Miso Banana Bread","author":"@bakerinaparka","source":"RecipeForToday Community","rating":4.5,"votes":1288,"time":"1 hr 15 min","servings":10,"difficulty":"Easy","tags":["baking","breakfast","vegetarian"],"ingredients":["4 very ripe bananas (black-spotted, almost liquid)","1/2 cup unsalted butter, melted and cooled","3 tbsp white miso paste","3/4 cup light brown sugar","2 eggs","1 tsp vanilla extract","1 3/4 cups all-purpose flour","1 tsp baking soda","1/2 tsp baking powder","1/2 cup sour cream","1/2 cup dark chocolate, roughly chopped"],"steps":["Heat the oven to 350°F. Line a 9x5 loaf pan with parchment, leaving overhang on the long sides.","Whisk the miso into the melted butter until completely smooth with no lumps. Lumps of miso turn into salt bombs in the finished loaf.","Mash the bananas in a large bowl until mostly smooth with a few lumps left. Add the miso butter, brown sugar, eggs, and vanilla. Whisk hard for 30 seconds.","Fold in the sour cream.","Sift the flour, baking soda, and baking powder over the top. Fold with a spatula until you can no longer see dry flour, then stop. Ten seconds of overmixing costs you the crumb.","Fold in the chocolate. Scrape into the pan and smooth the top.","Bake 55 to 65 minutes, until a skewer comes out with a few damp crumbs. If the top darkens too fast at 40 minutes, tent it with foil.","Cool in the pan 20 minutes, then lift out by the parchment. Slice only once fully cool."],"verdict":"The miso reads as caramel, not fish. Consistently one of the most re-rolled recipes in the collection."},{"id":"r005","title":"Crispy Chickpeas and Yogurt","author":"u/pantryraider","source":"RecipeForToday Community","rating":4.2,"votes":942,"time":"25 min","servings":2,"difficulty":"Easy","tags":["lunch","vegetarian","pantry"],"ingredients":["1 can (15 oz) chickpeas, drained and dried thoroughly","3 tbsp olive oil","1 tsp cumin seeds","1 tsp smoked paprika","1/2 tsp red pepper flakes","1 cup thick plain yogurt","1 clove garlic, grated","Juice of 1/2 lemon","Salt","Warm flatbread, for serving","Dill or mint, torn"],"steps":["Dry the chickpeas properly. Roll them between two towels until the skins start flaking off. Wet chickpeas steam instead of crisping.","Heat the olive oil in a skillet over medium-high. Add the chickpeas in one layer and leave them alone for 4 minutes.","Shake the pan and keep cooking, stirring occasionally, 6 to 8 more minutes until they rattle like gravel and are blistered brown.","Add the cumin seeds, paprika, and pepper flakes off the heat. The residual heat blooms them without burning.","Stir the garlic and lemon juice into the yogurt with a big pinch of salt. Spread it across the bottom of two shallow bowls.","Pile the hot chickpeas onto the cold yogurt, scatter with herbs, and mop it up with flatbread."],"verdict":"A pantry meal that outperforms its ingredient list. Docked points only for being repetitive by the third bowl."},{"id":"r006","title":"The 40-Minute Ragù That Tastes Like Four Hours","author":"Dario V.","source":"RecipeForToday Community","rating":4.6,"votes":3312,"time":"45 min","servings":4,"difficulty":"Medium","tags":["dinner","pasta","beef"],"ingredients":["1 lb ground beef, 80/20","4 oz pancetta or bacon, diced fine","1 onion, 1 carrot, 1 celery stalk — all chopped as fine as you can stand","3 tbsp tomato paste","1 cup whole milk","1 cup dry white wine","1 can (14 oz) crushed tomatoes","1 Parmesan rind","Salt and pepper","1 lb rigatoni or pappardelle","Parmesan, for serving"],"steps":["Render the pancetta in a wide pot over medium heat until the fat pools and the pieces are crisp, about 6 minutes.","Add the chopped vegetables and a pinch of salt. Cook 8 minutes until they collapse and start to catch on the bottom.","Add the beef and break it up. Do not stir constantly. Let it sit in contact with the pan so it browns rather than greys — about 8 minutes total.","Push everything aside, add the tomato paste to the bare pan, and let it fry and darken for 90 seconds. This is where the depth comes from.","Pour in the milk. Simmer, stirring, until it has almost entirely disappeared, about 6 minutes. It looks wrong. It is not wrong.","Add the wine and reduce by half. Then add the crushed tomatoes and the Parmesan rind.","Simmer uncovered at a lazy bubble for 20 minutes, stirring occasionally, until the fat separates and pools orange at the edges.","Boil the pasta one minute short of al dente. Move it to the sauce with a cup of pasta water and toss hard over heat for 90 seconds until it clings.","Fish out the rind. Serve with far more Parmesan than feels reasonable."],"verdict":"The milk step is what people question and then evangelize. Legitimately excellent."},{"id":"r007","title":"Salt and Vinegar Smashed Potatoes","author":"@spudcommittee","source":"RecipeForToday Community","rating":4.9,"votes":6740,"time":"50 min","servings":4,"difficulty":"Easy","tags":["side","vegetarian","potatoes"],"ingredients":["2 lbs baby potatoes","1 cup white vinegar","3 tbsp kosher salt","1/4 cup olive oil or duck fat","Flaky salt","Black pepper","Chives, sliced"],"steps":["Put the potatoes in a pot with the vinegar, kosher salt, and enough cold water to cover by an inch.","Bring to a boil and cook 20 to 25 minutes, until a knife slides in with no resistance. Boiling them in vinegar seasons them from the inside and keeps them from falling apart.","Drain and let them steam dry in the colander for 10 full minutes. Skipping this means soggy potatoes.","Heat the oven to 450°F. Spread the potatoes on a sheet pan and crush each one with the bottom of a glass until it's about half an inch thick and the edges have split open. Ragged edges are the point.","Drizzle generously with oil, making sure it gets into the cracks. Season with pepper.","Roast 25 to 30 minutes without flipping, until the edges are dark brown and audibly crunchy.","Hit with flaky salt and chives while still hot."],"verdict":"The best-rated thing in the entire database and nobody has argued with it yet."},{"id":"r008","title":"Egg Drop Soup, Fifteen Minutes","author":"Wen L.","source":"RecipeForToday Community","rating":4.3,"votes":1104,"time":"15 min","servings":2,"difficulty":"Easy","tags":["soup","quick","pantry"],"ingredients":["4 cups chicken stock","1 inch ginger, smashed","1 tbsp cornstarch mixed with 2 tbsp cold water","3 eggs, beaten with a fork until uniform","1 tsp toasted sesame oil","1 tsp soy sauce","White pepper","2 scallions, sliced thin"],"steps":["Bring the stock and ginger to a simmer. Fish out the ginger after 5 minutes.","Stir in the cornstarch slurry and simmer 1 minute until the broth thickens just enough to coat a spoon. This is what suspends the egg ribbons instead of letting them sink.","Turn the heat down until the surface is barely moving. A rolling boil shreds the egg into dust.","Pour the beaten egg in a thin steady stream from about a foot above the pot while stirring slowly in one direction. Stop stirring and count to ten.","Off the heat, add sesame oil, soy sauce, and a generous amount of white pepper.","Top with scallions and serve immediately."],"verdict":"Technique-forward and genuinely satisfying. The height of the pour is doing real work."},{"id":"r009","title":"Charred Cabbage With Anchovy Butter","author":"@brassicamaximalist","source":"RecipeForToday Community","rating":4.4,"votes":823,"time":"40 min","servings":4,"difficulty":"Easy","tags":["side","vegetable"],"ingredients":["1 head green cabbage, cut into 6 thick wedges through the core","3 tbsp olive oil","6 tbsp butter, softened","6 anchovy fillets, minced to a paste","1 clove garlic, grated","Zest of 1 lemon","1/2 tsp red pepper flakes","Breadcrumbs, toasted","Salt and pepper"],"steps":["Heat the oven to 425°F. Keep the core intact on each wedge — it's the only thing holding them together.","Heat a large oven-safe skillet over high heat until it's genuinely hot. Add the oil, then lay the wedges cut-side down.","Sear undisturbed for 5 minutes until the cut face is blackened in patches. Flip to the other cut side and repeat.","Move the whole skillet to the oven and roast 20 minutes, until a knife goes through the thickest part easily.","Meanwhile, mash the butter with the anchovies, garlic, lemon zest, and pepper flakes.","Pull the pan out and drop spoonfuls of the anchovy butter over the hot wedges. It will melt into every layer.","Scatter with toasted breadcrumbs and eat straight from the pan."],"verdict":"Nobody tastes anchovy. Everybody tastes the anchovy butter. Converts skeptics reliably."},{"id":"r010","title":"Overnight Oats That Aren't Sad","author":"u/6amrealist","source":"RecipeForToday Community","rating":3.9,"votes":1517,"time":"5 min + overnight","servings":1,"difficulty":"Easy","tags":["breakfast","make-ahead","vegetarian"],"ingredients":["1/2 cup rolled oats (not instant, not steel-cut)","2/3 cup whole milk or oat milk","3 tbsp plain yogurt","1 tbsp chia seeds","1 tbsp maple syrup","1/4 tsp salt","1/2 tsp vanilla","Grated apple or berries","Toasted nuts, added in the morning only"],"steps":["Combine the oats, milk, yogurt, chia, maple syrup, salt, and vanilla in a jar. Stir properly — chia clumps if you shake instead of stir.","Grate half an apple straight into the jar, or fold in berries.","Seal and refrigerate at least 6 hours, up to 3 days.","In the morning, loosen with a splash of milk — it will have set firmer than you expect.","Top with toasted nuts right before eating. Adding them the night before is how you get wet nuts, which nobody wants."],"verdict":"Good, not thrilling. The salt is the difference between this and the sad version."},{"id":"r011","title":"Garlic Confit and Everything You Do With It","author":"Marguerite O.","source":"RecipeForToday Community","rating":4.7,"votes":2205,"time":"1 hr 30 min","servings":12,"difficulty":"Easy","tags":["condiment","make-ahead","vegetarian"],"ingredients":["4 heads garlic, cloves separated and peeled","2 cups olive oil, or enough to submerge completely","4 sprigs thyme","2 bay leaves","1 tsp black peppercorns","1 dried chile, optional"],"steps":["Put the peeled cloves in the smallest saucepan they fit in as a single crowded layer.","Pour in olive oil until every clove is fully submerged with a quarter inch to spare. Any clove poking above the oil will scorch.","Add the thyme, bay, peppercorns, and chile.","Set over the lowest possible heat. You want lazy bubbles rising every few seconds, never a simmer. If it's sputtering, it's too hot.","Cook 60 to 90 minutes until the cloves are the color of pale honey and collapse under a spoon with no resistance.","Cool completely in the oil. Transfer cloves and oil together to a clean jar.","Refrigerate and use within two weeks. Keep it cold — this is the one rule that matters. Smash the cloves into pasta, spread them on toast, whisk them into vinaigrettes, or stir the oil into anything."],"verdict":"Not a meal, but it improves the next fifteen. The refrigeration rule is a food safety requirement, not a suggestion."},{"id":"r012","title":"Sheet Pan Gnocchi With Tomatoes","author":"@onepanhousehold","source":"RecipeForToday Community","rating":4.1,"votes":1876,"time":"30 min","servings":3,"difficulty":"Easy","tags":["dinner","vegetarian","sheet-pan"],"ingredients":["1 lb shelf-stable potato gnocchi, uncooked","2 pints cherry tomatoes","1 red onion, cut into thin wedges","4 cloves garlic, smashed","1/4 cup olive oil","1 tsp dried oregano","Salt and pepper","1 ball fresh mozzarella, torn","Basil"],"steps":["Heat the oven to 425°F.","Toss the dry gnocchi straight from the package with the tomatoes, onion, garlic, olive oil, oregano, salt, and pepper on a sheet pan. Do not boil the gnocchi first — that is the entire premise.","Spread everything into one layer with space between pieces. Crowding steams the gnocchi into paste.","Roast 22 to 25 minutes, shaking the pan once at the halfway mark, until the gnocchi are golden and puffed and the tomatoes have burst and gone jammy.","Tear the mozzarella over the hot pan and let it slump for 2 minutes.","Scatter with basil and serve straight from the pan."],"verdict":"Solid weeknight output. Loses a point because the gnocchi go leathery if you leave them ten minutes too long."},{"id":"r013","title":"Brown Sugar Pork Belly Bites","author":"@fatrendered","source":"RecipeForToday Community","rating":4.6,"votes":1442,"time":"2 hr 30 min","servings":4,"difficulty":"Medium","tags":["dinner","pork","slow"],"ingredients":["2 lbs skinless pork belly, cut into 1.5 inch cubes","2 tbsp kosher salt","3 tbsp dark brown sugar","2 tbsp soy sauce","2 tbsp rice vinegar","1 tbsp gochujang","4 cloves garlic, grated","1 inch ginger, grated","Scallions and sesame seeds"],"steps":["Heat the oven to 300°F. Toss the pork cubes with the salt and arrange fat-side up in a baking dish, not touching.","Cover tightly with foil and bake 90 minutes. The fat needs this time to render soft — rushing it at high heat gives you rubber.","Pour off the rendered fat (save it, it's excellent) and let the pork cool for 10 minutes.","Whisk the brown sugar, soy sauce, vinegar, gochujang, garlic, and ginger into a glaze.","Raise the oven to 450°F. Toss the pork in half the glaze and return uncovered to the oven.","Roast 20 to 25 minutes, brushing with the remaining glaze twice, until the edges are lacquered dark and slightly charred.","Rest 5 minutes, then scatter with scallions and sesame seeds. Eat with rice and something sharp and pickled."],"verdict":"Worth the two hours. The low-then-high sequence is the whole recipe."},{"id":"r014","title":"Lemon Pepper Tuna Melt","author":"u/dinerrevivalist","source":"RecipeForToday Community","rating":3.8,"votes":671,"time":"15 min","servings":2,"difficulty":"Easy","tags":["lunch","sandwich","pantry"],"ingredients":["2 cans oil-packed tuna, drained well","1/4 cup mayonnaise","2 tbsp finely diced celery","2 tbsp finely diced shallot","1 tbsp capers, chopped","Zest and juice of 1/2 lemon","1 tsp coarse black pepper","4 slices sourdough","4 slices sharp cheddar","3 tbsp softened butter"],"steps":["Flake the tuna into a bowl but leave some texture — mashing it into paste is the most common failure here.","Fold in the mayo, celery, shallot, capers, lemon zest and juice, and black pepper.","Butter the outside faces of all four bread slices.","Build each sandwich: bread, cheese, tuna, cheese, bread. Cheese on both sides glues the filling in and keeps the bread from going soggy.","Cook in a skillet over medium-low for 4 to 5 minutes per side, pressing gently with a spatula, until deep golden and the cheese has fully melted.","Rest 1 minute before cutting or the filling slides out."],"verdict":"Better than it sounds, not as good as its fans claim. Cheese-on-both-sides is legitimately good advice."},{"id":"r015","title":"Whipped Feta With Hot Honey","author":"@mezzeforever","source":"RecipeForToday Community","rating":4.5,"votes":2984,"time":"10 min","servings":6,"difficulty":"Easy","tags":["appetizer","vegetarian","quick"],"ingredients":["8 oz feta in brine, drained","1/3 cup thick Greek yogurt","2 tbsp olive oil","1 clove garlic","Juice of 1/2 lemon","1/3 cup honey","1 tsp red pepper flakes","1 strip lemon peel","Pistachios, chopped","Warm pita"],"steps":["Break the feta into chunks and put it in a food processor with the yogurt, olive oil, garlic, and lemon juice.","Run it for a full 2 minutes, scraping down twice. Most people stop at 30 seconds and end up with grainy dip. It should be as smooth as frosting.","Warm the honey with the pepper flakes and lemon peel in a small pan over low heat for 3 minutes. Do not let it boil.","Spread the whipped feta across a plate in thick swoops, building a shallow well in the center.","Pour the warm hot honey into the well and let it run down the ridges.","Scatter with pistachios and serve with warm pita."],"verdict":"The two-minute processor rule is the difference between this and every mediocre version of it."},{"id":"r016","title":"Tuna Jell-O Ring (1961 Revival)","author":"u/aspicapologist","source":"RecipeForToday Community","rating":1.1,"votes":4402,"time":"5 hr","servings":8,"difficulty":"Medium","tags":["cursed","retro","molded"],"ingredients":["2 packets unflavored gelatin","2 cups chicken broth, warmed","1 can tuna, drained","1/2 cup mayonnaise","1/2 cup diced celery","1/4 cup diced green olives","2 hard-boiled eggs, sliced","1 tbsp lemon juice","1 tsp onion powder","Lettuce leaves, for the platter"],"steps":["Bloom the gelatin in 1/2 cup of cold water for 5 minutes until it looks like wet sand.","Whisk the bloomed gelatin into the warm broth until fully dissolved. Chill 40 minutes, until it has the consistency of raw egg white.","Pour a half inch of the thickened broth into a ring mold. Arrange the egg slices face-down in the bottom — remember that whatever you place first ends up on top.","Chill 20 minutes to set that layer.","Fold the tuna, mayonnaise, celery, olives, lemon juice, and onion powder into the remaining broth. It will look like something has gone wrong. It has, but continue.","Pour over the set layer and refrigerate at least 4 hours, until firm all the way through.","Dip the mold in warm water for 10 seconds, invert onto a lettuce-lined platter, and shake once, firmly.","Serve cold. Serve it to people who have wronged you."],"verdict":"One star. Thousands of people have made this and almost nobody has finished it. Structurally sound, spiritually indefensible."},{"id":"r017","title":"Microwave Mug Meatloaf","author":"@dormfoodscientist","source":"RecipeForToday Community","rating":1.4,"votes":2187,"time":"8 min","servings":1,"difficulty":"Easy","tags":["cursed","microwave","beef"],"ingredients":["1/3 lb ground beef","2 tbsp breadcrumbs","1 egg","2 tbsp ketchup, plus more for the top","1 tsp onion powder","1/2 tsp salt","A large mug you do not care about"],"steps":["Mix everything except the topping ketchup directly in the mug with a fork. Do not overwork it, though at this point the texture is not really the issue.","Press the top flat and spread a layer of ketchup over it.","Microwave on high for 3 minutes. Check the internal temperature with a thermometer — it must reach 160°F throughout. Microwaves cook unevenly, so this is genuinely important with ground beef.","If it's under temperature, continue in 45-second bursts, checking each time.","Let it stand 2 minutes. Grey liquid will have pooled at the bottom of the mug. Pour it off or don't; it makes very little difference to the outcome.","Eat directly from the mug with a spoon while reflecting on the choices that led here."],"verdict":"It is safe. It is fast. It is grey. Reviewers describe the texture as 'meat sponge' with remarkable consistency."},{"id":"r018","title":"Banana Mayonnaise Sandwich","author":"Grandma Rutherford","source":"RecipeForToday Community","rating":1.8,"votes":3891,"time":"3 min","servings":1,"difficulty":"Easy","tags":["cursed","sandwich","regional"],"ingredients":["2 slices soft white bread","3 tbsp mayonnaise","1 banana, sliced into coins","A pinch of salt","Optional: crushed salted peanuts"],"steps":["Spread the mayonnaise thickly on both slices, edge to edge. Skimping here would be dishonest to the recipe.","Lay the banana coins in a single overlapping layer across one slice.","Sprinkle with salt and the peanuts if you're using them.","Close the sandwich, press gently, and cut on the diagonal.","Eat immediately. It gets worse — meaningfully worse — within ten minutes as the banana weeps into the mayonnaise."],"verdict":"A real regional dish with a real defensive fanbase. The rating reflects the general population, not the believers."},{"id":"r019","title":"Coca-Cola Cabbage Stew","author":"u/sodacooking","source":"RecipeForToday Community","rating":1.6,"votes":1023,"time":"50 min","servings":4,"difficulty":"Easy","tags":["cursed","stew","experimental"],"ingredients":["1 head green cabbage, roughly chopped","1 can (12 oz) regular Coca-Cola","2 cups beef broth","1 onion, sliced","3 tbsp ketchup","2 tbsp yellow mustard","1 tsp caraway seeds","Salt and pepper","1 lb kielbasa, sliced into coins"],"steps":["Brown the kielbasa in a large pot over medium-high heat, 5 minutes. Remove and set aside.","Cook the onion in the sausage fat until softened, about 5 minutes.","Add the cabbage and stir until it starts to wilt, about 6 minutes.","Pour in the Coca-Cola. It will foam aggressively and smell like a movie theater. Stir until the foam subsides.","Add the broth, ketchup, mustard, and caraway. Bring to a simmer.","Cover and cook 25 minutes, until the cabbage is fully soft and the liquid has darkened to a strange mahogany.","Return the kielbasa, simmer 5 more minutes, and season heavily with salt and pepper. It needs it.","Serve with something bland to cut the sweetness. Bread. Anything."],"verdict":"The cola never stops tasting like cola. Reviewers consistently note it is 'sweet in a way that soup should not be.'"},{"id":"r020","title":"Ranch-Brined Watermelon Steaks","author":"@grillcontrarian","source":"RecipeForToday Community","rating":0.9,"votes":5588,"time":"3 hr","servings":4,"difficulty":"Easy","tags":["cursed","grilling","vegetarian"],"ingredients":["1 small seedless watermelon, cut into 1-inch thick rounds","2 cups ranch dressing","2 tbsp soy sauce","1 tbsp smoked paprika","1 tsp garlic powder","Olive oil, for the grill","Flaky salt"],"steps":["Whisk the ranch, soy sauce, paprika, and garlic powder together in a shallow dish.","Submerge the watermelon rounds and refrigerate 2 to 3 hours, flipping once. The watermelon will release water and thin the marinade into something pale pink and unsettling.","Heat a grill or grill pan to high. Oil the grates well.","Pull the rounds out and let the excess drip off, but do not wipe them — the marinade is, regrettably, the point.","Grill 3 to 4 minutes per side until you have deep char marks and the edges have collapsed slightly.","Finish with flaky salt and serve hot, which is the wrong temperature for watermelon and part of why this is here."],"verdict":"The lowest-rated recipe in the database. 5,588 people confirmed independently that ranch and watermelon do not reconcile."},{"id":"r021","title":"Spaghetti Tacos","author":"@childhooddream","source":"RecipeForToday Community","rating":2.3,"votes":7712,"time":"25 min","servings":4,"difficulty":"Easy","tags":["cursed","pasta","novelty"],"ingredients":["1/2 lb spaghetti","2 cups jarred marinara","8 hard taco shells","1 cup shredded cheddar","1/2 cup sour cream","Shredded iceberg lettuce","Salt"],"steps":["Boil the spaghetti in well-salted water until fully soft — slightly past al dente. Structural integrity is not your friend here, but neither is stiffness.","Warm the marinara and toss the drained pasta in it until thoroughly coated.","Warm the taco shells in a 350°F oven for 4 minutes so they don't shatter on contact.","Using tongs, coil a nest of saucy spaghetti into each shell. Work over the pan. There is no clean way to do this.","Top with cheddar, a stripe of sour cream, and lettuce.","Eat over a plate, leaning forward, immediately. The shell has roughly ninety seconds before it surrenders."],"verdict":"Not offensive, just structurally doomed. The rating is high for this bracket because nostalgia is a powerful anesthetic."},{"id":"r022","title":"Cottage Cheese Lasagna, No Ricotta, No Regrets","author":"u/budgetitalian","source":"RecipeForToday Community","rating":2.1,"votes":1345,"time":"1 hr 10 min","servings":6,"difficulty":"Medium","tags":["cursed","pasta","baked"],"ingredients":["12 no-boil lasagna sheets","24 oz small-curd cottage cheese, not drained","3 cups jarred marinara","2 cups shredded mozzarella","1 egg","1 tsp dried basil","Salt and pepper"],"steps":["Heat the oven to 375°F.","Stir the egg, basil, salt, and pepper into the undrained cottage cheese. Do not drain it — the recipe as written depends on that liquid, which is also the source of the problem.","Spread a thin layer of marinara in a 9x13 dish.","Layer: noodles, cottage cheese mixture, sauce, mozzarella. Repeat three times, ending with sauce and a heavy blanket of mozzarella.","Cover with foil and bake 35 minutes.","Uncover and bake 20 more minutes until browned and bubbling at the edges.","Rest 20 minutes before cutting. It will still run. A pool of thin whey will collect on every plate. This is unavoidable at this ratio."],"verdict":"The whey is the whole story. Drain the cottage cheese and this jumps two full stars, but then it wouldn't be this recipe."},{"id":"r023","title":"Butter-Poached Hot Dogs in Cream Sauce","author":"@richness_maximizer","source":"RecipeForToday Community","rating":1.9,"votes":892,"time":"30 min","servings":4,"difficulty":"Easy","tags":["cursed","rich","dinner"],"ingredients":["8 hot dogs, scored on a diagonal","1 cup butter","1 cup heavy cream","2 tbsp flour","1 tsp yellow mustard","1/2 tsp nutmeg","Salt and white pepper","Egg noodles, for serving"],"steps":["Melt the butter in a saucepan over low heat until it's fully liquid but not browning.","Slide in the hot dogs and poach gently for 12 minutes, turning once. The scores will open into diamonds. They will look proud of themselves.","Remove the hot dogs. Pour off all but 3 tablespoons of butter.","Whisk the flour into the remaining butter and cook 90 seconds to make a blond roux.","Slowly whisk in the cream. Simmer 4 minutes until it coats a spoon.","Season with mustard, nutmeg, salt, and white pepper.","Return the hot dogs to the sauce, warm through, and serve over egg noodles.","The dish is beige from edge to edge. There is no garnish that fixes this and several reviewers have tried."],"verdict":"Too rich to finish and too plain to justify. Two stars is generous and reflects the first three bites only."},{"id":"r024","title":"Pickle Juice Pancakes","author":"u/brinebeliever","source":"RecipeForToday Community","rating":1.3,"votes":2044,"time":"20 min","servings":3,"difficulty":"Easy","tags":["cursed","breakfast","experimental"],"ingredients":["1 1/2 cups all-purpose flour","2 tbsp sugar","2 tsp baking powder","1/2 tsp baking soda","1/2 tsp salt","1 cup dill pickle brine","1/4 cup milk","1 egg","3 tbsp melted butter","Chopped dill pickles, for the batter","Maple syrup, for serving, apparently"],"steps":["Whisk the dry ingredients together in a large bowl.","In another bowl, whisk the pickle brine, milk, egg, and melted butter. The acid in the brine reacts with the baking soda, so the batter genuinely does rise well. This is the one thing the recipe gets right.","Combine wet into dry and stir until just barely mixed. Fold in the chopped pickles.","Let the batter rest 5 minutes. It will puff and smell like a delicatessen.","Cook on a buttered griddle over medium heat, about 2 minutes per side, until golden and set.","Serve with maple syrup, which is where the entire construction collapses."],"verdict":"Chemically clever, gastronomically hostile. Reviewers who ate them savory rated a full star higher."},{"id":"r025","title":"Grape Jelly Meatballs","author":"Grandma Rutherford","source":"RecipeForToday Community","rating":2.4,"votes":6231,"time":"3 hr","servings":10,"difficulty":"Easy","tags":["cursed","party","slow-cooker"],"ingredients":["2 lbs frozen cocktail meatballs","1 jar (18 oz) grape jelly","1 bottle (12 oz) chili sauce","1 tbsp yellow mustard","1 tsp Worcestershire sauce"],"steps":["Whisk the grape jelly, chili sauce, mustard, and Worcestershire in a slow cooker until the jelly has broken down into the sauce.","Add the frozen meatballs and stir to coat completely.","Cook on low for 3 hours, stirring once an hour, until the meatballs are heated through to 165°F and the sauce has thickened to a dark syrup.","Serve straight from the slow cooker with toothpicks.","Watch them disappear at the party while everyone insists they don't like them."],"verdict":"The highest-rated recipe in the cursed half, and it still can't crack 2.5. A genuine cultural artifact."},{"id":"r026","title":"Mayonnaise Chocolate Cake","author":"@wartimebaker","source":"RecipeForToday Community","rating":2.5,"votes":1789,"time":"50 min","servings":10,"difficulty":"Easy","tags":["cursed","baking","retro"],"ingredients":["2 cups all-purpose flour","1 cup sugar","1/3 cup unsweetened cocoa powder","2 tsp baking soda","1/2 tsp salt","1 cup mayonnaise","1 cup hot water","1 tsp vanilla extract"],"steps":["Heat the oven to 350°F and grease a 9-inch round pan.","Whisk the flour, sugar, cocoa, baking soda, and salt together.","Add the mayonnaise and stir until it disappears into the dry mix as a thick paste. Mayonnaise is oil and egg, which is why this works at all — it's not as absurd as it sounds.","Pour in the hot water and vanilla. Stir until smooth. The batter will be thin.","Bake 30 to 35 minutes, until a skewer comes out clean.","Cool completely in the pan. Warm slices taste distinctly of mayonnaise; cooled ones mostly don't. Mostly."],"verdict":"The best of the bad and the closest call in the database. It sits at 2.5 exactly, which is the border."},{"id":"r027","title":"Cereal Milk Gravy Over Biscuits","author":"@breakfastfusionist","source":"RecipeForToday Community","rating":1.2,"votes":1567,"time":"25 min","servings":4,"difficulty":"Easy","tags":["cursed","breakfast","experimental"],"ingredients":["3 cups milk steeped with 2 cups corn flakes for 20 minutes, then strained","1/2 lb breakfast sausage","3 tbsp flour","1/2 tsp black pepper","Salt","4 buttermilk biscuits, split and warmed"],"steps":["Steep the corn flakes in the cold milk for 20 minutes, then strain through a fine sieve, pressing gently. Discard the sodden flakes.","Brown the sausage in a skillet over medium heat, breaking it up, about 8 minutes. Do not drain the fat.","Sprinkle the flour over the sausage and cook 2 minutes, stirring constantly.","Slowly pour in the cereal milk, whisking to prevent lumps.","Simmer 5 minutes until thickened. Season with a lot of black pepper and salt.","Ladle over split warm biscuits. The gravy is sweet. The sausage is salty. Neither one wins and the conflict never resolves."],"verdict":"An idea that sounded good on a whiteboard. The sweetness reads as a mistake in every single bite."},{"id":"r028","title":"Canned Corn Ice Cream","author":"u/frozenmisadventure","source":"RecipeForToday Community","rating":2.0,"votes":734,"time":"6 hr","servings":6,"difficulty":"Medium","tags":["cursed","dessert","frozen"],"ingredients":["1 can (15 oz) sweet corn, drained","2 cups heavy cream","1 cup whole milk","3/4 cup sugar","5 egg yolks","1/2 tsp salt","1 tsp vanilla"],"steps":["Blend the drained corn with the milk until completely smooth, then strain through a fine sieve, pressing hard on the solids.","Combine the corn milk, cream, and half the sugar in a saucepan. Heat until steaming, not boiling.","Whisk the yolks with the remaining sugar until pale.","Temper: pour a ladle of the hot cream into the yolks while whisking, then return everything to the pan.","Cook over low heat, stirring constantly with a spatula, until it coats the back of a spoon and reaches 175°F. This takes about 8 minutes and cannot be rushed or you get sweet scrambled eggs.","Strain, stir in the salt and vanilla, and chill at least 4 hours.","Churn according to your machine, then freeze 2 hours to firm up.","The texture is genuinely excellent. The flavor is creamed corn. Both of these things are true at once."],"verdict":"Technically well-executed and conceptually doomed. Fresh corn versions rate above 4 — canned is what sinks it."},{"id":"r029","title":"Ketchup Soup","author":"@lastresortkitchen","source":"RecipeForToday Community","rating":1.0,"votes":3102,"time":"10 min","servings":2,"difficulty":"Easy","tags":["cursed","soup","pantry"],"ingredients":["1 cup ketchup","3 cups hot water","1 tsp sugar","1 tsp dried oregano","1 bouillon cube","Salt and pepper","Saltine crackers"],"steps":["Whisk the ketchup and hot water together in a saucepan until no streaks remain.","Add the bouillon cube, sugar, and oregano. Bring to a simmer.","Simmer 5 minutes, stirring, which does not improve it but does make it hot.","Season with salt and pepper and taste. It will taste like warm ketchup, because that is what it is.","Crush saltines over the top. The crackers are the best part of this dish and everyone who has made it agrees."],"verdict":"A survival recipe wearing a dinner costume. One star, 3,102 votes, near-total consensus."},{"id":"r030","title":"Deep-Fried Butter Balls","author":"@statefairhistorian","source":"RecipeForToday Community","rating":2.2,"votes":4915,"time":"1 hr 30 min","servings":6,"difficulty":"Hard","tags":["cursed","fried","dessert"],"ingredients":["1 cup cold unsalted butter","1 cup all-purpose flour","1 cup buttermilk","1 egg","1 tsp baking powder","1 tbsp sugar","1/2 tsp salt","1 quart neutral oil, for frying","Powdered sugar and cinnamon"],"steps":["Scoop the cold butter into 1-inch balls with a melon baller. Set them on a lined tray and freeze at least 1 hour, until rock solid. Anything less and they liquefy in the fryer.","Whisk the flour, baking powder, sugar, and salt. Add the buttermilk and egg and whisk to a thick, smooth batter.","Heat the oil to 375°F. Use a thermometer — below 360°F the butter melts before the crust sets, and the balls burst.","Working with 3 or 4 at a time, pull the frozen butter straight from the freezer, dip in the batter, and lower into the oil immediately. Do not let them warm on the counter.","Fry 90 seconds to 2 minutes, until deep golden. Any longer and they rupture.","Drain on a rack, dust heavily with powdered sugar and cinnamon, and let cool 2 minutes.","Eat one. You will not eat two. Nobody eats two."],"verdict":"Technically demanding and genuinely impressive to pull off. The rating is entirely about what happens after you eat it."}];
+
+let DATA = SEED;
+
+async function loadRecipes(){
+  if(!USE_REMOTE_DB) return SEED;
+  try{
+    const res = await fetch('data/recipes.json',{cache:'no-cache'});
+    if(!res.ok) throw new Error(res.status);
+    const json = await res.json();
+    return Array.isArray(json.recipes) && json.recipes.length ? json.recipes : SEED;
+  }catch(err){
+    console.warn('Falling back to the inline seed database.',err);
+    return SEED;
+  }
+}
+
+/* ---------- 2. STORAGE ------------------------------------- */
+const KEY='rft:v1';
+const DAILY_LIMIT=3;
+
+const blank=()=>({user:null,profiles:{},day:today(),used:0});
+
+function today(){
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+let S;
+function load(){
+  try{ S=JSON.parse(localStorage.getItem(KEY))||blank(); }
+  catch{ S=blank(); }
+  if(S.day!==today()){ S.day=today(); S.used=0; }
+  if(!S.profiles) S.profiles={};
+  save();
+}
+function save(){
+  try{ localStorage.setItem(KEY,JSON.stringify(S)); }
+  catch{ /* private browsing — the session still works, it just won't persist */ }
+}
+function profile(){
+  if(!S.user) return null;
+  if(!S.profiles[S.user]) S.profiles[S.user]={found:{},log:[]};
+  return S.profiles[S.user];
+}
+/* Signed-out players still collect a pantry, under a local handle. */
+function activeBook(){
+  const p=profile();
+  if(p) return p;
+  if(!S.profiles['__guest__']) S.profiles['__guest__']={found:{},log:[]};
+  return S.profiles['__guest__'];
+}
+
+const rollsLeft=()=>Math.max(0,DAILY_LIMIT-S.used);
+
+/* ---------- 3. THE ROLL ------------------------------------ */
+/* Coin flip picks the bracket first, then a recipe inside it.
+   This guarantees a true 50/50 no matter how the database is
+   weighted as it grows. */
+function drawRecipe(){
+  const book=activeBook();
+  const wantGood=Math.random()<0.5;
+  const good=DATA.filter(r=>r.rating>2.5);
+  const bad =DATA.filter(r=>r.rating<=2.5);
+  const first  = wantGood?good:bad;
+  const second = wantGood?bad:good;
+  const freshFirst  = first.filter(r=>!book.found[r.id]);
+  const freshSecond = second.filter(r=>!book.found[r.id]);
+  /* Honour the coin flip while both brackets still have something new.
+     Only once a bracket is exhausted do we cross over, so a player sees
+     all 30 before anything repeats. */
+  const from = freshFirst.length ? freshFirst
+             : freshSecond.length ? freshSecond
+             : DATA;
+  return from[Math.floor(Math.random()*from.length)];
+}
+
+/* ---------- 4. RENDERING ----------------------------------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function starRow(rating){
+  const full=Math.floor(rating), half=rating-full>=0.5;
+  let out='';
+  for(let i=0;i<5;i++){
+    if(i<full) out+='<span style="color:var(--brass)">&#9733;</span>';
+    else if(i===full&&half) out+='<span style="color:var(--brass)">&#189;</span>';
+    else out+='<span style="color:#C9C2B0">&#9733;</span>';
+  }
+  return out;
+}
+
+function renderTicket(r){
+  const good=r.rating>2.5;
+  $('#ticket').innerHTML=`
+    <div class="ticket-head">
+      <p class="ticket-kicker">Roll ${S.used} of ${DAILY_LIMIT} &middot; ${esc(today())}</p>
+      <h2>${esc(r.title)}</h2>
+      <p class="byline">by <b>${esc(r.author)}</b> &middot; ${esc(r.source)}</p>
+      <dl class="facts">
+        <div class="fact"><dt>Time</dt><dd>${esc(r.time)}</dd></div>
+        <div class="fact"><dt>Serves</dt><dd>${esc(String(r.servings))}</dd></div>
+        <div class="fact"><dt>Difficulty</dt><dd>${esc(r.difficulty)}</dd></div>
+        <div class="fact"><dt>Rating</dt><dd>Sealed</dd></div>
+      </dl>
+    </div>
+    <div class="ticket-body">
+      <div>
+        <h3 class="sec-title"><span>Ingredients</span><span>${r.ingredients.length}</span></h3>
+        <ul class="ing">${r.ingredients.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>
+      </div>
+      <div>
+        <h3 class="sec-title"><span>Method</span><span>${r.steps.length} steps</span></h3>
+        <ol class="steps">${r.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol>
+      </div>
+    </div>
+    <div class="seal" id="seal">
+      <div class="pre-reveal">
+        <div class="lid-wrap">
+          <div class="lid">
+            <svg viewBox="0 0 150 46" aria-hidden="true">
+              <rect x="0" y="20" width="150" height="15" rx="7.5" fill="#0F2422"/>
+              <path d="M12 24C12 8 138 8 138 24z" fill="#E2412C"/>
+              <rect x="64" y="0" width="22" height="11" rx="5.5" fill="#0F2422"/>
+            </svg>
+          </div>
+        </div>
+        <p class="eyebrow" style="color:#7C8B87">Rating sealed</p>
+        <p>Cook it first. The stars come off the lid once you've actually eaten the thing — that's the only way this game means anything.</p>
+        <button class="btn-cook" id="cookedBtn">I cooked it</button>
+      </div>
+      <div class="reveal">
+        <p class="eyebrow" style="color:#7C8B87">The verdict</p>
+        <div class="stars">${starRow(r.rating)}</div>
+        <p class="score">${r.rating.toFixed(1)}<span> / 5.0</span></p>
+        <p class="votes">${r.votes.toLocaleString()} ratings</p>
+        <p class="verdict">${esc(r.verdict)}</p>
+        <p class="band ${good?'good':'bad'}">${good?'You drew from the good half':'You drew from the bad half'}</p>
+      </div>
+    </div>`;
+
+  $('#cookedBtn').addEventListener('click',()=>{
+    $('#seal').classList.add('open');
+    const book=activeBook();
+    if(book.found[r.id]) book.found[r.id].cooked=true;
+    save(); renderPantry();
+  });
+}
+
+function renderPips(){
+  const left=rollsLeft();
+  $('#pips').innerHTML=Array.from({length:DAILY_LIMIT},(_,i)=>
+    `<span class="pip${i<DAILY_LIMIT-left?' spent':''}"></span>`).join('');
+  $('#rollsText').textContent = left===0 ? 'none left today' : `${left} left today`;
+  $('#startBtn').disabled = left===0;
+  $('#startBtn').textContent = left===DAILY_LIMIT ? 'Stir the pot' : (left===0 ? 'Pot is empty' : 'Stir again');
+  $('#startNote').textContent = left===0 ? 'Rolls reset at midnight' : '';
+}
+
+function renderPantry(){
+  const book=activeBook();
+  $('#pantry').innerHTML=DATA.map(r=>{
+    const f=book.found[r.id];
+    if(!f) return `<div class="slot locked"><span>?</span></div>`;
+    if(!f.cooked) return `<div class="slot found">
+        <p class="st">Found &middot; not cooked</p>
+        <div><p class="nm">${esc(r.title)}</p><p class="sc" style="color:var(--rim)">Rating sealed</p></div>
+      </div>`;
+    const bad=r.rating<=2.5;
+    return `<div class="slot cooked">
+        <p class="st">Cooked</p>
+        <div><p class="nm">${esc(r.title)}</p><p class="sc${bad?' bad':''}">${r.rating.toFixed(1)} &#9733;</p></div>
+      </div>`;
+  }).join('');
+  const found=Object.keys(book.found).length;
+  const cooked=Object.values(book.found).filter(f=>f.cooked).length;
+  $('#pantryStat').textContent=`${found} of ${DATA.length} found &middot; ${cooked} cooked`
+    .replace('&middot;','·');
+}
+
+/* ---------- 5. THE ANIMATION SEQUENCE ---------------------- */
+const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function startRoll(){
+  if(rollsLeft()<=0) return;
+  const stage=$('#potStage');
+  const btn=$('#startBtn');
+  btn.disabled=true;
+  stage.querySelector('svg').classList.add('boiling');
+  $('#startNote').textContent='Boiling…';
+
+  const recipe=drawRecipe();
+  const wait=reducedMotion?200:2400;
+
+  setTimeout(()=>{
+    S.used++;
+    const book=activeBook();
+    if(!book.found[recipe.id]) book.found[recipe.id]={foundAt:Date.now(),cooked:false};
+    book.log.unshift({id:recipe.id,title:recipe.title,rating:recipe.rating,at:Date.now()});
+    book.log=book.log.slice(0,60);
+    save();
+
+    document.body.classList.add('rolled');   /* pot docks to the corner */
+    $('#startNote').textContent='';
+    renderTicket(recipe);
+    renderPips();          /* renderPips owns the note text from here */
+    renderPantry();
+
+    /* the ladle keeps stirring in the dock — it never stops once lit */
+    requestAnimationFrame(()=>{
+      $('#cardSlot').scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'});
+    });
+  },wait);
+}
+
+/* ---------- 6. ACCOUNTS (local) ---------------------------- */
+function openModal(html){
+  $('#sheetBody').innerHTML=html;
+  $('#modal').classList.add('open');
+  const first=$('#sheetBody').querySelector('input,button');
+  if(first) first.focus();
+}
+function closeModal(){ $('#modal').classList.remove('open'); }
+
+function accountScreen(){
+  if(S.user){
+    const p=profile();
+    const rows=p.log.length
+      ? p.log.slice(0,12).map(e=>{
+          const cooked=p.found[e.id]?.cooked;
+          const bad=e.rating<=2.5;
+          return `<li><span>${esc(e.title)}</span><span class="h-sc ${cooked?(bad?'bad':''):'sealed'}">${cooked?e.rating.toFixed(1)+' ★':'sealed'}</span></li>`;
+        }).join('')
+      : '<li><span style="color:var(--rim)">Nothing yet. Stir the pot.</span></li>';
+    openModal(`
+      <h3 id="sheetTitle">${esc(S.user)}</h3>
+      <p>${Object.keys(p.found).length} recipes found · ${rollsLeft()} rolls left today</p>
+      <p class="eyebrow" style="margin-bottom:.7rem">Recent rolls</p>
+      <ul class="hist">${rows}</ul>
+      <button class="btn-solid" id="signOut">Sign out</button>
+      <p class="fine">This account lives in this browser only. Clearing site data clears your pantry. Real accounts need a backend — see the README.</p>`);
+    $('#signOut').addEventListener('click',()=>{ S.user=null; save(); syncAccountBtn(); renderPantry(); closeModal(); });
+  }else{
+    openModal(`
+      <h3 id="sheetTitle">Pick a handle</h3>
+      <p>So your pantry has somewhere to live.</p>
+      <label class="f" for="uname">Handle</label>
+      <input class="f" id="uname" maxlength="24" autocomplete="username" placeholder="hungrygambler">
+      <button class="btn-solid" id="doSignIn">Start collecting</button>
+      <p class="fine">No password, no email, no server. This saves to your browser's local storage so the site can run on GitHub Pages. Swapping in real auth is documented in the README.</p>`);
+    const go=()=>{
+      const v=$('#uname').value.trim();
+      if(!v) return;
+      const guest=S.profiles['__guest__'];
+      S.user=v;
+      if(!S.profiles[v]) S.profiles[v]={found:{},log:[]};
+      /* carry anything collected before signing in */
+      if(guest){
+        Object.assign(S.profiles[v].found,guest.found);
+        S.profiles[v].log=[...guest.log,...S.profiles[v].log].slice(0,60);
+        delete S.profiles['__guest__'];
+      }
+      save(); syncAccountBtn(); renderPantry(); closeModal();
+    };
+    $('#doSignIn').addEventListener('click',go);
+    $('#uname').addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+  }
+}
+function syncAccountBtn(){ $('#accountBtn').textContent = S.user ? S.user : 'Sign in'; }
+
+/* ---------- 7. BOOT ---------------------------------------- */
+(async function init(){
+  load();
+  DATA=await loadRecipes();
+  syncAccountBtn();
+  renderPips();
+  renderPantry();
+  $('#startBtn').addEventListener('click',startRoll);
+  $('#accountBtn').addEventListener('click',accountScreen);
+  $('#closeModal').addEventListener('click',closeModal);
+  $('#modal').addEventListener('click',e=>{ if(e.target===$('#modal')) closeModal(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+})();
+</script>
+</body>
+</html>
